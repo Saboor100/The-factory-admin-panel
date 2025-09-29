@@ -1,0 +1,267 @@
+/* ===========================
+   Factory Admin – Auth Styles (Final Updated)
+   =========================== */
+
+/* ---- Design tokens ---- */
+:root {
+  --bg-900: #0c0f12;
+  --bg-800: #121418;
+  --card-bg: rgba(20, 22, 26, 0.85);
+  --border: #242933;
+  --text-100: #f5f6f7;
+  --text-300: #b8c0cc;
+  --primary: #c6ff1a;
+  --primary-600: #b2f50f;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- Base / Reset ---- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--text-100);
+  background: radial-gradient(circle at center, rgba(198, 255, 26, 0.08), transparent 60%),
+    var(--bg-900);
+}
+
+/* ---- Container ---- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/* ---- Card Styling ---- */
+.form-card {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px 30px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+}
+
+.form-card h2 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-100);
+}
+
+.form-card p {
+  margin-top: 14px;
+  color: var(--text-300);
+  font-size: 14px;
+  text-align: center;
+}
+
+.form-card a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.form-card a:hover {
+  text-decoration: underline;
+}
+
+/* ---- Form Spacing ---- */
+.form-card form {
+  margin-top: 10px;
+}
+
+.form-group {
+  margin-top: 16px;
+}
+
+label {
+  display: block;
+  color: var(--text-100);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+/* ---- Flexible Input Layout with Icons ---- */
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  background-color: #0b0e12;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  height: 48px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-with-icon:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(198, 255, 26, 0.1);
+}
+
+.input-with-icon input {
+  all: unset;
+  flex: 1;
+  font-size: 14px;
+  padding: 10px 0;
+  color: var(--text-100);
+}
+
+.input-icon {
+  color: #8893a4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.input-icon.clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.input-icon.clickable:hover {
+  color: var(--primary);
+}
+
+/* ---- Button ---- */
+.form-card button {
+  width: 100%;
+  height: 48px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  background: var(--primary);
+  color: #0a0d0f;
+  cursor: pointer;
+  transition: transform 0.06s ease, filter 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 20px rgba(198, 255, 26, 0.18);
+}
+
+.form-card button:hover {
+  filter: brightness(0.96);
+}
+
+.form-card button:active {
+  transform: translateY(1px);
+}
+
+.form-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  filter: saturate(0.6);
+}
+
+/* ---- Alerts ---- */
+.error-msg,
+.info-msg {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-align: center;
+  border: 1px solid;
+}
+
+.error-msg {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.06);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+.info-msg {
+  color: #65f79c;
+  background: rgba(101, 247, 156, 0.06);
+  border-color: rgba(101, 247, 156, 0.2);
+}
+
+/* ---- Utils ---- */
+.text-center {
+  text-align: center;
+}
+
+.mt-8 {
+  margin-top: 8px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.custom-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--text-100);
+  background: #0b0e12;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.custom-input::placeholder {
+  color: #8893a4;
+}
+
+.custom-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(198, 255, 26, 0.12);
+  background: #0a0d11;
+}
+
+.otp-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.otp-input {
+  width: 48px;
+  height: 48px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-100);
+  background: #0b0e12;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.otp-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(198, 255, 26, 0.12);
+  background: #0a0d11;
+}
+
+/* ---- Mobile Optimization (Optional) ---- */
+@media (max-width: 640px) {
+  .form-card {
+    padding: 28px 20px;
+  }
+}

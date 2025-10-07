@@ -69,7 +69,7 @@ const VideoEditModal = ({ video, onClose, onSuccess }) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
+      if (file.size > 50 * 1024 * 1024) {
         setError('Thumbnail file size must be less than 2MB');
         return;
       }
@@ -355,7 +355,7 @@ const VideoEditModal = ({ video, onClose, onSuccess }) => {
                     />
                   </label>
                   <p className="upload-hint">
-                    Recommended: 1280x720px, JPG or PNG, max 2MB
+                    "Recommended: 1280x720px, JPG or PNG, max 10MB"
                   </p>
                 </div>
               </div>

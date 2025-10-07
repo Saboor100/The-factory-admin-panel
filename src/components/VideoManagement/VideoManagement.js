@@ -1,4 +1,4 @@
-import React, { useState, useEffect , useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
@@ -10,8 +10,7 @@ import {
   Eye,
   Heart,
   DollarSign,
-  Upload,
-  Download
+  Upload
 } from 'lucide-react';
 import videoService from '../../services/videoService';
 import { useAuth } from '../../context/AuthContext';
@@ -34,11 +33,11 @@ const VideoManagement = () => {
   const [totalVideos, setTotalVideos] = useState(0);
   const [limit] = useState(12);
   
-  // Filters - Fix Issue 1: Initialize isPremium as empty string instead of default value
+  // Filters
   const [filters, setFilters] = useState({
     search: '',
     category: 'all',
-    isPremium: '', // Changed from default to empty string
+    isPremium: '',
     featured: '',
     sortBy: 'createdAt',
     sortOrder: 'desc',
@@ -52,14 +51,12 @@ const VideoManagement = () => {
   
   const categories = ['all', 'hand speed', 'general lacrosse', 'shooting', 'defense', 'goalie', 'conditioning'];
 
-  useEffect(() => {
-    fetchVideos();
-  }, [currentPage, filters]);
-
-  const fetchVideos = useCallback(async () => {
+  const fetchVideos = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      console.log('🔄 Fetching videos...');
 
       const response = await videoService.getAllVideos({
         page: currentPage,
@@ -67,7 +64,10 @@ const VideoManagement = () => {
         ...filters
       });
 
+      console.log('📦 Response received:', response);
+
       if (response.success) {
+        console.log('✅ Setting videos:', response.data.length);
         setVideos(response.data);
         setTotalPages(response.pagination.totalPages);
         setTotalVideos(response.pagination.totalVideos);
@@ -80,11 +80,11 @@ const VideoManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, limit, filters]); 
+  };
 
   useEffect(() => {
     fetchVideos();
-  }, [fetchVideos]);
+  }, [currentPage, filters]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -102,21 +102,34 @@ const VideoManagement = () => {
     setShowEditModal(true);
   };
 
-  // Fix Issue 3: Update delete logic to show proper action based on video status
-  const handleDeleteVideo = async (videoId, hardDelete = false) => {
+  const handleDeleteVideo = async (videoId, hardDelete = true) => {
     const video = videos.find(v => v._id === videoId);
-    const action = hardDelete ? 'permanently delete' : (video?.isActive ? 'deactivate' : 'delete');
+    const action = hardDelete ? 'permanently delete' : 'deactivate';
     
-    if (!window.confirm(`Are you sure you want to ${action} this video?`)) {
+    if (!window.confirm(`Are you sure you want to ${action} this video? ${hardDelete ? 'This cannot be undone!' : ''}`)) {
       return;
     }
     
     try {
-      const response = await videoService.deleteVideo(videoId, hardDelete);
-      if (response.success) {
+      console.log('🗑️ Deleting video:', videoId, 'hardDelete:', hardDelete);
+      
+      await videoService.deleteVideo(videoId, hardDelete);
+      
+      console.log('✅ Delete successful, refreshing...');
+      
+      // Remove from local state immediately
+      setVideos(prevVideos => prevVideos.filter(v => v._id !== videoId));
+      setTotalVideos(prev => prev - 1);
+      
+      // Refresh to be sure
+      setTimeout(() => {
         fetchVideos();
-      }
+      }, 100);
+      
+      console.log('✅ Video deleted permanently!');
+      
     } catch (error) {
+      console.error('❌ Delete error:', error);
       alert('Failed to delete video: ' + error.message);
     }
   };
@@ -183,7 +196,6 @@ const VideoManagement = () => {
             <p>Manage and organize your training videos</p>
           </div>
           <div className="video-header-actions">
-            
             <button
               onClick={() => setShowUploadModal(true)}
               className="btn-primary"
@@ -228,7 +240,7 @@ const VideoManagement = () => {
               </select>
             </div>
 
-            {/* Premium Filter - Fix Issue 1: Add default "All Videos" option */}
+            {/* Premium Filter */}
             <div className="filter-group">
               <select
                 value={filters.isPremium}
@@ -283,7 +295,7 @@ const VideoManagement = () => {
                     onClick={() => handleBulkDelete(true)}
                     className="btn-bulk delete"
                   >
-                    Delete
+                    Delete Permanently
                   </button>
                 )}
               </div>
@@ -395,8 +407,6 @@ const VideoManagement = () => {
         />
       )}
 
-      
-
       {loading && (
         <div className="loading-overlay">
           <div className="loading-card">
@@ -409,7 +419,7 @@ const VideoManagement = () => {
   );
 };
 
-// Video Card Component - Fix Issue 3: Update delete button logic
+// Video Card Component
 const VideoCard = ({ 
   video, 
   viewMode = 'grid',
@@ -477,27 +487,13 @@ const VideoCard = ({
                   <Star size={16} />
                   {video.featured ? 'Unfeature' : 'Feature'}
                 </button>
-                {/* Fix Issue 3: Show appropriate delete action based on video status */}
-                {video.isActive ? (
-                  <button onClick={() => { onDelete(video._id, false); setShowActions(false); }}>
-                    <Trash2 size={16} />
-                    Deactivate
-                  </button>
-                ) : (
-                  <button onClick={() => { onDelete(video._id, false); setShowActions(false); }}>
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
-                )}
-                {userRole === 'super_admin' && (
-                  <button 
-                    onClick={() => { onDelete(video._id, true); setShowActions(false); }}
-                    className="danger"
-                  >
-                    <Trash2 size={16} />
-                    Delete Permanently
-                  </button>
-                )}
+                <button 
+                  onClick={() => { onDelete(video._id, true); setShowActions(false); }}
+                  className="danger"
+                >
+                  <Trash2 size={16} />
+                  Delete Permanently
+                </button>
               </div>
             )}
           </div>
@@ -558,27 +554,13 @@ const VideoCard = ({
                   <Star size={16} />
                   {video.featured ? 'Unfeature' : 'Feature'}
                 </button>
-                {/* Fix Issue 3: Show appropriate delete action based on video status */}
-                {video.isActive ? (
-                  <button onClick={() => { onDelete(video._id, false); setShowActions(false); }}>
-                    <Trash2 size={16} />
-                    Deactivate
-                  </button>
-                ) : (
-                  <button onClick={() => { onDelete(video._id, false); setShowActions(false); }}>
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
-                )}
-                {userRole === 'super_admin' && (
-                  <button 
-                    onClick={() => { onDelete(video._id, true); setShowActions(false); }}
-                    className="danger"
-                  >
-                    <Trash2 size={16} />
-                    Delete Permanently
-                  </button>
-                )}
+                <button 
+                  onClick={() => { onDelete(video._id, true); setShowActions(false); }}
+                  className="danger"
+                >
+                  <Trash2 size={16} />
+                  Delete Permanently
+                </button>
               </div>
             )}
           </div>

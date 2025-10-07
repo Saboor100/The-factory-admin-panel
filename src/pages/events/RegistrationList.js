@@ -19,6 +19,8 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
   const [selectedRegistrations, setSelectedRegistrations] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [editingRegistration, setEditingRegistration] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -45,7 +47,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
 
   const fetchEventDetails = async () => {
     try {
-      // Use your existing eventService to get event details
       const eventService = await import('../../services/events/eventService');
       const response = await eventService.default.getEvent(eventId);
       setEvent(response.data);
@@ -97,6 +98,29 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
     }
   };
 
+  const handleEditRegistration = (registration) => {
+    setEditingRegistration({...registration});
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await registrationService.updateRegistration(
+        editingRegistration._id,
+        {
+          registrationStatus: editingRegistration.registrationStatus,
+          paymentStatus: editingRegistration.paymentStatus,
+          notes: editingRegistration.notes
+        }
+      );
+      setShowEditModal(false);
+      setEditingRegistration(null);
+      fetchRegistrations();
+    } catch (error) {
+      setError(error.message || 'Failed to update registration');
+    }
+  };
+
   const handleSelectRegistration = (registrationId) => {
     setSelectedRegistrations(prev => {
       if (prev.includes(registrationId)) {
@@ -142,6 +166,7 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
   };
 
   const formatDate = (date) => {
+    if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -217,7 +242,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
 
   return (
     <div className="clean-registration-list">
-      {/* Clean Header matching video management style */}
       <div className="registration-header">
         <div className="header-content">
           <div className="header-info">
@@ -239,17 +263,15 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
           </div>
           <div className="header-actions">
             <div className="registration-count">
-            {registrations.length} Registration{registrations.length !== 1 ? 's' : ''}
-          </div>
+              {registrations.length} Registration{registrations.length !== 1 ? 's' : ''}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="content-container">
-        {/* Clean Filters matching video style */}
         <div className="registration-filters">
           <div className="filters-grid">
-            {/* Search Input */}
             <div className="filter-group search-group">
               <div className="search-input-wrapper">
                 <svg className="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,7 +294,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
               </div>
             </div>
 
-            {/* Status Filter */}
             <div className="filter-group">
               <select
                 value={filters.status}
@@ -286,7 +307,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
               </select>
             </div>
 
-            {/* Payment Status Filter */}
             <div className="filter-group">
               <select
                 value={filters.paymentStatus}
@@ -301,7 +321,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
               </select>
             </div>
 
-            {/* Filter Toggle */}
             <div className="filter-group">
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -316,7 +335,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
             </div>
           </div>
 
-          {/* Additional Filters */}
           {showFilters && (
             <div className="additional-filters">
               <div className="additional-filters-grid">
@@ -359,7 +377,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
           )}
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="error-state">
             <div className="error-content">
@@ -376,7 +393,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
           </div>
         )}
 
-        {/* Registrations Table */}
         {loading ? (
           <div className="loading-table">
             {[...Array(5)].map((_, i) => (
@@ -405,7 +421,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
           </div>
         ) : (
           <div className="registrations-container">
-            {/* Bulk Actions */}
             {selectedRegistrations.length > 0 && (
               <div className="bulk-actions">
                 <div className="bulk-info">
@@ -429,7 +444,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
               </div>
             )}
 
-            {/* Table */}
             <div className="registrations-table">
               <div className="table-header">
                 <div className="header-cell checkbox-cell">
@@ -496,9 +510,9 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
                       <span className={`status-badge ${getStatusClass(registration.registrationStatus)}`}>
                         {registration.registrationStatus}
                       </span>
-                      {registration.checkedIn && (
+                      {registration.checkedIn && registration.checkInDate && (
                         <div className="checkin-status">
-                          Checked in: {formatDate(registration.checkInTime)}
+                          Checked in: {formatDate(registration.checkInDate)}
                         </div>
                       )}
                     </div>
@@ -531,7 +545,10 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
                         >
                           Ticket
                         </button>
-                        <button className="action-btn edit-btn">
+                        <button 
+                          onClick={() => handleEditRegistration(registration)}
+                          className="action-btn edit-btn"
+                        >
                           Edit
                         </button>
                       </div>
@@ -541,7 +558,6 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
               </div>
             </div>
 
-            {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="pagination">
                 <div className="pagination-info">
@@ -604,6 +620,86 @@ const CleanRegistrationList = ({ eventId, onBack }) => {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && editingRegistration && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Registration</h2>
+              <button onClick={() => setShowEditModal(false)} className="modal-close">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Registration Status</label>
+                <select 
+                  value={editingRegistration.registrationStatus}
+                  onChange={(e) => setEditingRegistration({
+                    ...editingRegistration,
+                    registrationStatus: e.target.value
+                  })}
+                  className="form-control"
+                >
+                  <option value="registered">Registered</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Payment Status</label>
+                <select 
+                  value={editingRegistration.paymentStatus}
+                  onChange={(e) => setEditingRegistration({
+                    ...editingRegistration,
+                    paymentStatus: e.target.value
+                  })}
+                  className="form-control"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="failed">Failed</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Notes</label>
+                <textarea 
+                  value={editingRegistration.notes || ''}
+                  onChange={(e) => setEditingRegistration({
+                    ...editingRegistration,
+                    notes: e.target.value
+                  })}
+                  className="form-control"
+                  rows="4"
+                  placeholder="Add notes about this registration..."
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveEdit}
+                className="btn-primary"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

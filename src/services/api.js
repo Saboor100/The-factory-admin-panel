@@ -2,21 +2,27 @@ import axios from 'axios';
 import { API_CONFIG, STORAGE_KEYS } from '../utils/constants';
 
 // Create axios instance
+// ✅ api.js - hardcoded for now or from .env correctly
 const api = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
-  timeout: API_CONFIG.TIMEOUT,
+  baseURL: 'https://the-factory-server.onrender.com/api',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
 // Request interceptor to add token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`; 
+    
+    // ✅ Only set Authorization header **if token is valid**
+    if (token && token !== 'null' && token !== 'undefined') {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      // 🔥 Also remove it if no good token — helps avoid duplicate headers
+      delete config.headers['Authorization'];
     }
+
     return config;
   },
   (error) => {

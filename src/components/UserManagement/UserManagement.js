@@ -14,7 +14,7 @@ const UserManagement = () => {
   const { user, token, isAuthenticated } = useAuth(); // Get current user, token, and auth status
   
   // Updated API configuration
-  const API_BASE = 'http://localhost:3000/api/admin/users'; // Full URL with protocol
+  const API_BASE = 'https://the-factory-server.onrender.com/api/admin/users'; // Full URL with protocol
   
   // Get token from AuthContext
   const getAuthToken = () => {

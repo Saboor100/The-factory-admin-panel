@@ -25,30 +25,50 @@ const LoginForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+  e.preventDefault();
+  setIsLoading(true);
+  setError('');
 
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      setIsLoading(false);
-      return;
-    }
+  console.log('🔑 Login attempt:', formData.email);
 
-    try {
-      const result = await login(formData.email, formData.password);
-      if (result.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(result.message || 'Login failed');
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('An unexpected error occurred. Please try again.');
-    }
-
+  if (!formData.email || !formData.password) {
+    setError('Please fill in all fields');
     setIsLoading(false);
-  };
+    return;
+  }
+
+  try {
+    console.log('📞 Calling login...');
+    const result = await login(formData.email, formData.password);
+    console.log('📥 Login result:', result);
+    
+    if (result.success) {
+      // Verify token immediately
+      const token = localStorage.getItem('adminToken');
+      console.log('✅ Login successful!');
+      console.log('💾 Token stored:', !!token);
+      console.log('💾 Token type:', typeof token);
+      console.log('💾 Token length:', token?.length);
+      console.log('💾 Token preview:', token?.substring(0, 30));
+      
+      if (!token || token === 'null') {
+        console.error('❌ Token was not stored properly!');
+        setError('Login succeeded but token storage failed. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      navigate(from, { replace: true });
+    } else {
+      setError(result.message || 'Login failed');
+    }
+  } catch (err) {
+    console.error('💥 Login exception:', err);
+    setError('An unexpected error occurred. Please try again.');
+  }
+
+  setIsLoading(false);
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">

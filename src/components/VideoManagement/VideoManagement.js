@@ -110,7 +110,7 @@ const VideoManagement = () => {
   };
 
   const handleDeleteVideo = async (videoId, hardDelete = true) => {
-    const video = videos.find(v => v._id === videoId);
+    
     const action = hardDelete ? 'permanently delete' : 'deactivate';
     
     if (!window.confirm(`Are you sure you want to ${action} this video? ${hardDelete ? 'This cannot be undone!' : ''}`)) {

@@ -205,11 +205,10 @@ throw authError;
       
       // Handle timeout specifically
       if (error.code === 'ECONNABORTED') {
-        throw {
-          message: 'Update request timed out. The event might have been updated successfully.',
-          code: 'TIMEOUT',
-          type: 'timeout'
-        };
+        const timeoutError = new Error('Update request timed out. The event might have been updated successfully.');
+timeoutError.code = 'TIMEOUT';
+timeoutError.type = 'timeout';
+throw timeoutError;
       }
       
       throw error.response?.data || error;

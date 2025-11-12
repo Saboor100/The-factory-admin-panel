@@ -99,28 +99,25 @@ const eventService = {
       
       // Handle specific error types
       if (error.code === 'ECONNABORTED') {
-        throw {
-          message: 'Request timed out. The event might have been created successfully. Please check your events list.',
-          code: 'TIMEOUT',
-          type: 'timeout'
-        };
+        const timeoutError = new Error('Request timed out. The event might have been created successfully. Please check your events list.');
+timeoutError.code = 'TIMEOUT';
+timeoutError.type = 'timeout';
+throw timeoutError;
       }
       
       if (error.response?.status === 400) {
-        throw {
-          message: error.response.data?.message || 'Invalid data provided',
-          code: 'VALIDATION_ERROR',
-          type: 'validation',
-          details: error.response.data
-        };
+        const validationError = new Error(error.response.data?.message || 'Invalid data provided');
+validationError.code = 'VALIDATION_ERROR';
+validationError.type = 'validation';
+validationError.details = error.response.data;
+throw validationError;
       }
       
       if (error.response?.status === 401) {
-        throw {
-          message: 'Authentication failed. Please login again.',
-          code: 'AUTH_ERROR',
-          type: 'authentication'
-        };
+        const authError = new Error('Authentication failed. Please login again.');
+authError.code = 'AUTH_ERROR';
+authError.type = 'authentication';
+throw authError;
       }
       
       throw error.response?.data || error;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_CONFIG, STORAGE_KEYS } from '../utils/constants';
+import { STORAGE_KEYS } from '../utils/constants';
 
 // Create axios instance
 // ✅ api.js - hardcoded for now or from .env correctly

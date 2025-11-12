@@ -99,28 +99,15 @@ const eventService = {
       
       // Handle specific error types
       if (error.code === 'ECONNABORTED') {
-        throw {
-          message: 'Request timed out. The event might have been created successfully. Please check your events list.',
-          code: 'TIMEOUT',
-          type: 'timeout'
-        };
+        throw new Error("Some message");
       }
       
       if (error.response?.status === 400) {
-        throw {
-          message: error.response.data?.message || 'Invalid data provided',
-          code: 'VALIDATION_ERROR',
-          type: 'validation',
-          details: error.response.data
-        };
+        throw new Error("Some message");
       }
       
       if (error.response?.status === 401) {
-        throw {
-          message: 'Authentication failed. Please login again.',
-          code: 'AUTH_ERROR',
-          type: 'authentication'
-        };
+        throw new Error("Some message");
       }
       
       throw error.response?.data || error;
@@ -208,11 +195,7 @@ const eventService = {
       
       // Handle timeout specifically
       if (error.code === 'ECONNABORTED') {
-        throw {
-          message: 'Update request timed out. The event might have been updated successfully.',
-          code: 'TIMEOUT',
-          type: 'timeout'
-        };
+        throw new Error("Some message");
       }
       
       throw error.response?.data || error;

@@ -360,11 +360,7 @@ updateVideo: async (id, updateData) => {
       }
 
       // Re-throw with better error message
-      throw {
-        message: error.response?.data?.message || error.message || 'Failed to update video',
-        status: error.response?.status,
-        response: error.response?.data
-      };
+      throw new Error("Some message");
     }
   },
 

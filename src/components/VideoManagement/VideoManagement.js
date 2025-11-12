@@ -49,7 +49,14 @@ const VideoManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingVideo, setEditingVideo] = useState(null);
   
-  const categories = ['all', 'hand speed', 'general lacrosse', 'shooting', 'defense', 'goalie', 'conditioning'];
+  const categories = [
+  'all',
+  'faceoff',
+  'general lacrosse',
+  'shooting',
+  'defense',
+  'goalie',
+];
 
   const fetchVideos = async () => {
     try {

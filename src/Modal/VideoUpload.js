@@ -9,7 +9,7 @@ const VideoUploadModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'hand speed',
+    category: 'faceoff',
     tags: [],
     isPremium: false,
     price: 0,
@@ -35,7 +35,13 @@ const VideoUploadModal = ({ onClose, onSuccess }) => {
   const videoInputRef = useRef(null);
   const thumbnailInputRef = useRef(null);
   
-  const categories = ['hand speed', 'general lacrosse', 'shooting', 'defense', 'goalie', 'conditioning'];
+  const categories = [
+  'faceoff',
+  'general lacrosse',
+  'shooting',
+  'defense',
+  'goalie'
+];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;

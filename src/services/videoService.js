@@ -1,10 +1,9 @@
 // Enhanced video service with better error handling and debugging
 import axios from 'axios';
-import { API_CONFIG, STORAGE_KEYS, VIDEO_ENDPOINTS } from '../utils/constants';
+import { STORAGE_KEYS, VIDEO_ENDPOINTS } from '../utils/constants';
 
 // Create axios instance with longer timeout for large uploads
 const videoApi = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
   timeout: 300000, // 5 minutes for large uploads
   headers: {
     'Content-Type': 'application/json',
@@ -90,12 +89,11 @@ videoApi.interceptors.response.use(
     }
     
     // Return structured error
-    throw {
-      message: error.response?.data?.message || error.message || 'Upload failed',
-      status: error.response?.status,
-      code: error.code,
-      response: error.response?.data
-    };
+    const errorToThrow = new Error(error.response?.data?.message || error.message || 'Upload failed');
+errorToThrow.status = error.response?.status;
+errorToThrow.code = error.code;
+errorToThrow.response = error.response?.data;
+throw errorToThrow;
   }
 );
 
@@ -360,11 +358,10 @@ updateVideo: async (id, updateData) => {
       }
 
       // Re-throw with better error message
-      throw {
-        message: error.response?.data?.message || error.message || 'Failed to update video',
-        status: error.response?.status,
-        response: error.response?.data
-      };
+      const updateError = new Error(error.response?.data?.message || error.message || 'Failed to update video');
+updateError.status = error.response?.status;
+updateError.response = error.response?.data;
+throw updateError;
     }
   },
 

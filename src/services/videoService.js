@@ -1,101 +1,14 @@
 // Enhanced video service with better error handling and debugging
-import axios from 'axios';
+import api from './api'; // ✅ USE YOUR MAIN API INSTANCE
 import { STORAGE_KEYS, VIDEO_ENDPOINTS } from '../utils/constants';
 
-// Create axios instance with longer timeout for large uploads
-const videoApi = axios.create({
-  timeout: 300000, // 5 minutes for large uploads
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true
-});
+// ✅ Configure the main api instance for video uploads
+const configureVideoApi = () => {
+  // Set longer timeout for video operations
+  api.defaults.timeout = 300000; // 5 minutes
+};
 
-// Enhanced request interceptor
-videoApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    // Handle FormData properly - let browser set Content-Type with boundary
-    if (config.data instanceof FormData) {
-      // Remove any existing Content-Type header to let browser set it with boundary
-      delete config.headers['Content-Type'];
-      console.log('📋 FormData detected - letting browser set Content-Type with boundary');
-    } else {
-      // For regular JSON data, ensure Content-Type is set
-      if (!config.headers['Content-Type']) {
-        config.headers['Content-Type'] = 'application/json';
-      }
-    }
-    
-    console.log('🔐 Request Config:', {
-      url: config.url,
-      method: config.method,
-      hasAuth: !!config.headers['Authorization'],
-      timeout: config.timeout,
-      contentType: config.headers['Content-Type'] || 'browser-set',
-      isFormData: config.data instanceof FormData
-    });
-    
-    return config;
-  },
-  (error) => {
-    console.error('❌ Request interceptor error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Enhanced response interceptor with better error handling
-videoApi.interceptors.response.use(
-  (response) => {
-    console.log('✅ Response received:', {
-      status: response.status,
-      statusText: response.statusText,
-      hasData: !!response.data
-    });
-    return response.data;
-  },
-  (error) => {
-    console.error('❌ Response interceptor error:', {
-      message: error.message,
-      code: error.code,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data
-    });
-
-    // Handle specific error cases
-    if (error.code === 'ECONNABORTED') {
-      throw new Error('Upload timeout. The file may be too large or connection too slow.');
-    }
-    
-    if (error.code === 'ERR_NETWORK') {
-      throw new Error('Network error. Please check your connection and try again.');
-    }
-    
-    if (error.response?.status === 413) {
-      throw new Error('File too large. Please reduce file size and try again.');
-    }
-    
-    if (error.response?.status === 401) {
-      throw new Error('Authentication failed. Please login again.');
-    }
-    
-    if (error.response?.status === 403) {
-      throw new Error('Permission denied. You may not have upload permissions.');
-    }
-    
-    // Return structured error
-    const errorToThrow = new Error(error.response?.data?.message || error.message || 'Upload failed');
-errorToThrow.status = error.response?.status;
-errorToThrow.code = error.code;
-errorToThrow.response = error.response?.data;
-throw errorToThrow;
-  }
-);
+configureVideoApi();
 
 const videoService = {
   // Enhanced upload with better error handling and retry logic
@@ -107,7 +20,7 @@ const videoService = {
     try {
       // Validate token before upload
       const token = localStorage.getItem(STORAGE_KEYS.ADMIN_TOKEN);
-      if (!token) {
+      if (!token || token === 'null' || token === 'undefined') {
         throw new Error('No authentication token found. Please login again.');
       }
       
@@ -164,8 +77,8 @@ const videoService = {
       
       console.log(`⏱️ Using timeout: ${(dynamicTimeout / 1000).toFixed(0)} seconds`);
       
-      // Make the upload request
-      const response = await videoApi.post(VIDEO_ENDPOINTS.UPLOAD, formData, {
+      // Make the upload request using the main api instance
+      const response = await api.post(VIDEO_ENDPOINTS.UPLOAD, formData, {
         timeout: dynamicTimeout,
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -182,14 +95,13 @@ const videoService = {
             }
           }
         },
-        // Add retry configuration
         validateStatus: function (status) {
-          return status >= 200 && status < 300; // Only resolve for 2xx status codes
+          return status >= 200 && status < 300;
         }
       });
       
-      console.log('✅ Upload successful:', response);
-      return response;
+      console.log('✅ Upload successful:', response.data);
+      return response.data;
       
     } catch (error) {
       console.error(`❌ Upload attempt ${retryCount + 1} failed:`, error);
@@ -198,7 +110,7 @@ const videoService = {
       if (retryCount < MAX_RETRIES && (
         error.code === 'ERR_NETWORK' || 
         error.code === 'ECONNABORTED' ||
-        error.status >= 500
+        error.response?.status >= 500
       )) {
         console.log(`🔄 Retrying upload in 2 seconds... (${retryCount + 1}/${MAX_RETRIES})`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -208,55 +120,25 @@ const videoService = {
       // Format error for user
       let userMessage = 'Upload failed. Please try again.';
       
-      if (error.message.includes('timeout')) {
+      if (error.code === 'ECONNABORTED') {
         userMessage = 'Upload timeout. The file may be too large. Try reducing file size or check your connection.';
-      } else if (error.message.includes('Network')) {
+      } else if (error.code === 'ERR_NETWORK') {
         userMessage = 'Network error. Please check your internet connection and try again.';
-      } else if (error.message.includes('Authentication')) {
+      } else if (error.response?.status === 431) {
+        userMessage = 'Request headers too large. Please try logging in again.';
+        // Clear potentially corrupted token
+        localStorage.removeItem(STORAGE_KEYS.ADMIN_TOKEN);
+      } else if (error.response?.status === 401) {
         userMessage = 'Authentication failed. Please refresh the page and login again.';
-      } else if (error.response?.message) {
-        userMessage = error.response.message;
+      } else if (error.response?.data?.message) {
+        userMessage = error.response.data.message;
       }
       
       throw new Error(userMessage);
     }
   },
 
-  // Test connection before upload
-  testConnection: async () => {
-    try {
-      console.log('🔍 Testing connection...');
-      const response = await videoApi.get('/admin/videos/test');
-      console.log('✅ Connection test successful:', response);
-      return response;
-    } catch (error) {
-      console.error('❌ Connection test failed:', error);
-      throw error;
-    }
-  },
-
-  // Get server status
-  getServerStatus: async () => {
-    try {
-      const response = await videoApi.get('/health');
-      return response;
-    } catch (error) {
-      console.error('Server status check failed:', error);
-      throw error;
-    }
-  },
-
-  // Test authentication
-  testAuth: async () => {
-    try {
-      const response = await videoApi.get('/admin/videos/test');
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // All other existing methods...
+  // All other methods using the main api instance
   getAllVideos: async (filters = {}) => {
     const params = new URLSearchParams();
     
@@ -281,24 +163,25 @@ const videoService = {
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
     
     try {
-      const response = await videoApi.get(`${VIDEO_ENDPOINTS.GET_ALL}?${params.toString()}`);
-      return response;
+      const response = await api.get(`${VIDEO_ENDPOINTS.GET_ALL}?${params.toString()}`);
+      return response.data;
     } catch (error) {
+      console.error('Get videos error:', error);
       throw error;
     }
   },
 
   getVideoById: async (id) => {
     try {
-      const response = await videoApi.get(`${VIDEO_ENDPOINTS.GET_BY_ID}/${id}`);
-      return response;
+      const response = await api.get(`${VIDEO_ENDPOINTS.GET_BY_ID}/${id}`);
+      return response.data;
     } catch (error) {
+      console.error('Get video by ID error:', error);
       throw error;
     }
   },
 
-  
-updateVideo: async (id, updateData) => {
+  updateVideo: async (id, updateData) => {
     try {
       console.log('🎬 Starting video update for ID:', id);
       console.log('📊 Update data type:', updateData.constructor.name);
@@ -321,7 +204,7 @@ updateVideo: async (id, updateData) => {
 
       // Configure request based on data type
       const config = {
-        timeout: isFormData ? 300000 : 30000, // 5 minutes for file uploads, 30 seconds for text updates
+        timeout: isFormData ? 300000 : 30000,
       };
 
       // For FormData, let browser set Content-Type with boundary
@@ -331,10 +214,10 @@ updateVideo: async (id, updateData) => {
         };
       }
 
-      const response = await videoApi.put(`${VIDEO_ENDPOINTS.UPDATE}/${id}`, updateData, config);
+      const response = await api.put(`${VIDEO_ENDPOINTS.UPDATE}/${id}`, updateData, config);
       
-      console.log('✅ Update response:', response);
-      return response;
+      console.log('✅ Update response:', response.data);
+      return response.data;
       
     } catch (error) {
       console.error('❌ Update video error:', {
@@ -344,7 +227,6 @@ updateVideo: async (id, updateData) => {
         data: error.response?.data
       });
 
-      // Handle specific error cases for updates
       if (error.response?.status === 400) {
         throw new Error(error.response?.data?.message || 'Invalid data provided');
       }
@@ -357,11 +239,14 @@ updateVideo: async (id, updateData) => {
         throw new Error('File too large. Please reduce file size and try again.');
       }
 
-      // Re-throw with better error message
+      if (error.response?.status === 431) {
+        throw new Error('Request headers too large. Please try logging in again.');
+      }
+
       const updateError = new Error(error.response?.data?.message || error.message || 'Failed to update video');
-updateError.status = error.response?.status;
-updateError.response = error.response?.data;
-throw updateError;
+      updateError.status = error.response?.status;
+      updateError.response = error.response?.data;
+      throw updateError;
     }
   },
 
@@ -369,40 +254,75 @@ throw updateError;
     const params = hardDelete ? '?hardDelete=true' : '';
     
     try {
-      const response = await videoApi.delete(`${VIDEO_ENDPOINTS.DELETE}/${id}${params}`);
-      return response;
+      const response = await api.delete(`${VIDEO_ENDPOINTS.DELETE}/${id}${params}`);
+      return response.data;
     } catch (error) {
+      console.error('Delete video error:', error);
       throw error;
     }
   },
 
   toggleFeatured: async (id) => {
     try {
-      const response = await videoApi.patch(`${VIDEO_ENDPOINTS.TOGGLE_FEATURED}/${id}/featured`);
-      return response;
+      const response = await api.patch(`${VIDEO_ENDPOINTS.TOGGLE_FEATURED}/${id}/featured`);
+      return response.data;
     } catch (error) {
+      console.error('Toggle featured error:', error);
       throw error;
     }
   },
 
   bulkDelete: async (videoIds, hardDelete = false) => {
     try {
-      const response = await videoApi.delete(VIDEO_ENDPOINTS.BULK_DELETE, {
+      const response = await api.delete(VIDEO_ENDPOINTS.BULK_DELETE, {
         data: {
           videoIds,
           hardDelete
         }
       });
-      return response;
+      return response.data;
     } catch (error) {
+      console.error('Bulk delete error:', error);
       throw error;
     }
   },
 
   getVideoStats: async () => {
     try {
-      const response = await videoApi.get(VIDEO_ENDPOINTS.STATS);
-      return response;
+      const response = await api.get(VIDEO_ENDPOINTS.STATS);
+      return response.data;
+    } catch (error) {
+      console.error('Get video stats error:', error);
+      throw error;
+    }
+  },
+
+  testConnection: async () => {
+    try {
+      console.log('🔍 Testing connection...');
+      const response = await api.get('/admin/videos/test');
+      console.log('✅ Connection test successful:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Connection test failed:', error);
+      throw error;
+    }
+  },
+
+  getServerStatus: async () => {
+    try {
+      const response = await api.get('/health');
+      return response.data;
+    } catch (error) {
+      console.error('Server status check failed:', error);
+      throw error;
+    }
+  },
+
+  testAuth: async () => {
+    try {
+      const response = await api.get('/admin/videos/test');
+      return response.data;
     } catch (error) {
       throw error;
     }

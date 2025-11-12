@@ -10,7 +10,7 @@ const createEventApi = () => {
       ...api.defaults,
       headers: {
         ...api.defaults.headers,
-        'x-admin-token': token,
+        
       },
       timeout: 60000, // Default 60 seconds timeout
     },

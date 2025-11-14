@@ -54,6 +54,7 @@ const VideoManagement = () => {
   'faceoff',
   'general lacrosse',
   'shooting',
+  'whistles',
   'defense',
   'goalie',
 ];

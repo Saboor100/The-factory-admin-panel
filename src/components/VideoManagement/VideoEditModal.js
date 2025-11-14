@@ -37,7 +37,7 @@ const VideoEditModal = ({ video, onClose, onSuccess }) => {
 
 
   const categories = [
-    'hand speed', 'general lacrosse', 'shooting', 'defense', 'goalie', 'conditioning'
+    'Face off', 'general lacrosse', 'shooting','Whistles' ,'defense', 'goalie'
   ];
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const VideoEditModal = ({ video, onClose, onSuccess }) => {
       setFormData({
         title: video.title || '',
         description: video.description || '',
-        category: video.category || 'hand speed',
+        category: video.category || 'Face off',
         tags: video.tags || [],
         isPremium: video.isPremium || false,
         price: video.price || 0,

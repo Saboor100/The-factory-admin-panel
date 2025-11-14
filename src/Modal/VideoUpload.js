@@ -39,6 +39,7 @@ const VideoUploadModal = ({ onClose, onSuccess }) => {
   'faceoff',
   'general lacrosse',
   'shooting',
+  'whistles',
   'defense',
   'goalie'
 ];

@@ -14,7 +14,7 @@ const EventCreate = ({ onBack, onSuccess }) => {
     organizerName: '',
     organizerEmail: '',
     organizerPhone: '',
-    category: 'lacrosse_camp',
+    category: 'overnight_camp',
     tags: '',
     isPublished: false,
     isFeatured: false,
@@ -43,15 +43,15 @@ const EventCreate = ({ onBack, onSuccess }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const eventCategories = [
-    { value: 'lacrosse_camp', label: 'Lacrosse Camp' },
-    { value: 'tournament', label: 'Tournament' },
-    { value: 'clinic', label: 'Clinic' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'training', label: 'Training' },
-    { value: 'social', label: 'Social' },
-    { value: 'fundraiser', label: 'Fundraiser' },
-    { value: 'other', label: 'Other' }
-  ];
+  { value: '', label: 'All Categories' },
+  { value: 'overnight_camp', label: 'Overnight Camp' },
+  { value: 'recruiting_event', label: 'Recruiting Event' },
+  { value: 'weekly_training', label: 'Weekly Training' },
+  { value: 'complete_faceoff_training', label: 'Complete Faceoff Training' },
+  { value: 'development_day', label: 'Development Day' },
+  { value: 'tuneup', label: 'Tune-up' },
+  { value: 'other', label: 'Other' }
+];
 
   const ageGroups = ['U8', 'U10', 'U12', 'U14', 'U16', 'U18', 'Adult', 'All Ages'];
   const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'];

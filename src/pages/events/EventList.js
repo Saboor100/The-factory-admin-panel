@@ -148,16 +148,15 @@ const EventList = ({
   };
 
   const eventCategories = [
-    { value: '', label: 'All Categories' },
-    { value: 'lacrosse_camp', label: 'Lacrosse Camp' },
-    { value: 'tournament', label: 'Tournament' },
-    { value: 'clinic', label: 'Clinic' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'training', label: 'Training' },
-    { value: 'social', label: 'Social' },
-    { value: 'fundraiser', label: 'Fundraiser' },
-    { value: 'other', label: 'Other' }
-  ];
+  { value: '', label: 'All Categories' },
+  { value: 'overnight_camp', label: 'Overnight Camp' },
+  { value: 'recruiting_event', label: 'Recruiting Event' },
+  { value: 'weekly_training', label: 'Weekly Training' },
+  { value: 'complete_faceoff_training', label: 'Complete Faceoff Training' },
+  { value: 'development_day', label: 'Development Day' },
+  { value: 'tuneup', label: 'Tune-up' },
+  { value: 'other', label: 'Other' }
+];
 
   const statusOptions = [
     { value: 'all', label: 'All Events' },
